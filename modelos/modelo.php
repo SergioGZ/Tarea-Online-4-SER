@@ -50,6 +50,29 @@ class modelo {
     endif;
   }
 
+  public function login($user)
+    {
+        $resultModelo = [
+            "correcto" => false,
+            "datos" => null,
+            "error" => null,
+        ];
+        //Realizamos la consulta...
+        try { //Preparamos la consulta...
+            $sql = "SELECT * FROM usuarios where rol = '$user'";
+            $resultsquery = $this->conexion->query($sql);
+            //Si la consulta se realizó correctamente...
+            if ($resultsquery) {
+                $resultModelo["correcto"] = true;
+                $resultModelo["datos"] = $resultsquery->fetch(PDO::FETCH_ASSOC);
+            }
+        } catch (PDOException $ex) {
+            $resultModelo["error"] = $ex->getMessage();
+        }
+
+        return $resultModelo;
+    }
+
   /**
    * Función que realiza el listado de todos los usuarios registrados
    * Devuelve un array asociativo con tres campos:

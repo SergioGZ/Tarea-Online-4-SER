@@ -40,6 +40,76 @@ class controlador {
     include_once 'vistas/inicio.php';
   }
 
+  public function login($user, $pass)
+    {
+        // Obtenemos los datos del usuario
+        $datoUsuario = $this->modelo->login($user);
+        if ($datoUsuario['correcto']) {
+            if (
+                $datoUsuario['datos']['rol'] == $user && $datoUsuario['datos']['rol'] == $pass
+            ) {
+                //session_start();
+                $_SESSION['user'] = $user;
+                $_SESSION['iduser'] = $datoUsuario['datos']['id'];
+                $_SESSION['rol'] = $datoUsuario['datos']['rol'];
+                $_SESSION['avatar'] = $datoUsuario['datos']['imagen'];
+            } else {
+                header("Location: vistas/login.php?error=loginincorrecto");
+            }
+            $this->userLoginOk();
+        } else {
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "Error!! No se pudieron obtener los datos del usuario!! :( <br/> ({$datoUsuario["error"]})",
+            ];
+        }
+    }
+
+    public function userLoginOk()
+    {
+        // Almacenamos en el array 'parametros[]'los valores que vamos a mostrar en la vista
+        $parametros = [
+            "tituloventana" => "Mi Pequeño Blog - " . $_SESSION['user'] . " (" . $_SESSION['rol'] . ")",
+            "datos" => null,
+            "mensajes" => [],
+        ];
+
+        // Realizamos la consulta y almacenmos los resultados en la variable $resultModelo
+        if (isset($_SESSION['user']) && $_SESSION['rol'] == "admin") {
+            $resultModelo = $this->modelo->listado($_SESSION['user_id']);
+        } elseif (isset($_SESSION['user']) && $_SESSION['rol'] == "user") {
+            $resultModelo = $this->modelo->listado($_SESSION['user_id']);
+        }
+
+        // Si la consulta se realizó correctamente transferimos los datos obtenidos
+        // de la consulta del modelo ($resultModelo["datos"]) a nuestro array parámetros
+        // ($parametros["datos"]), que será el que le pasaremos a la vista para visualizarlos
+        if ($resultModelo["correcto"]) {
+            $parametros["datos"] = $resultModelo["datos"];
+            //Definimos el mensaje para el alert de la vista de que todo fue correctamente
+            $this->mensajes[] = [
+                "tipo" => "success",
+                "mensaje" => "La consulta realizó correctamente!! :)",
+            ];
+        } else {
+            //Definimos el mensaje para el alert de la vista de que se produjeron errores al realizar el listado
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "Error!! La consulta no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})",
+            ];
+        }
+        //Asignamos al campo 'mensajes' del array de parámetros el valor del atributo
+        //'mensaje', que recoge cómo finalizó la operación:
+        $parametros['mensajes'] = $this->mensajes;
+
+        // Incluimos la vista en la que visualizaremos los datos o un mensaje de error
+        if (isset($_SESSION['user']) && $_SESSION['rol'] == "admin") {
+            include_once 'vistas/listado.php';
+        } elseif (isset($_SESSION['user']) && $_SESSION['rol'] == "user") {
+            include_once 'vistas/listado.php';
+        }
+    }
+
   /**
    * Método que obtiene de la base de datos el listado de usuarios y envía dicha
    * infomación a la vista correspondiente para su visualización
