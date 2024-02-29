@@ -17,6 +17,10 @@ function checkParam($param)
 //Definimos un objeto controlador
 $controlador = new controlador();
 
+if (isset($_SESSION['user']))  {
+    include_once 'vistas/listadoAdmin.php';
+}
+
 if ($_GET && $_GET["accion"]) {
     //Sanitizamos los datos que recibamos mediante el GET
     $accion = preg_replace('/[^a-zA-Z0-9]/', '', $_GET["accion"]);
@@ -37,3 +41,4 @@ if ($_GET && $_GET["accion"]) {
 } else {
     $controlador->index();
 }
+?>

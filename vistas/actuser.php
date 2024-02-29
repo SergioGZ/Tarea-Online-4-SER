@@ -8,7 +8,7 @@
       <div class="container cuerpo text-center">	
         <ul>
           <li> <a href="index.php?accion=listado"> Listar usuarios</a></li>
-          <li> <a href="index.php?accion=adduser"> Añadir usuario</a></li>
+          <li> <a href="index.php?accion=addentrada"> Añadir usuario</a></li>
         </ul>
         <p><h2><img class="alineadoTextoImagen" src="images/user.png" width="50px"/>Actualizar Usuario</h2> </p>
       </div>

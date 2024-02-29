@@ -59,7 +59,7 @@ class modelo {
         ];
         //Realizamos la consulta...
         try { //Preparamos la consulta...
-            $sql = "SELECT * FROM usuarios where rol = '$user'";
+            $sql = "SELECT * FROM usuarios where nick = '$user'";            
             $resultsquery = $this->conexion->query($sql);
             //Si la consulta se realizó correctamente...
             if ($resultsquery) {
@@ -71,6 +71,88 @@ class modelo {
         }
 
         return $resultModelo;
+    }
+
+    public function listadoEntradasAdmin() {
+      $resultmodelo = [
+          "correcto" => FALSE,
+          "datos" => NULL,
+          "error" => NULL
+      ];
+      //Realizamos la consulta...
+      try {  //Definimos la instrucción SQL  
+        $sql = "SELECT * FROM entradas";
+        // Hacemos directamente la consulta al no tener parámetros
+        $resultsquery = $this->conexion->query($sql);
+        //Supervisamos si la inserción se realizó correctamente... 
+        if ($resultsquery) :
+          $resultmodelo["correcto"] = TRUE;
+          $resultmodelo["datos"] = $resultsquery->fetchAll(PDO::FETCH_ASSOC);
+        endif; // o no :(
+      } catch (PDOException $ex) {
+        $resultmodelo["error"] = $ex->getMessage();
+      }
+  
+      return $resultmodelo;
+    }
+
+    public function listadoEntradasUsuario($id) {
+      $return = [
+          "correcto" => FALSE,
+          "datos" => NULL,
+          "error" => NULL
+      ];
+      //Realizamos la consulta...
+      try {  //Definimos la instrucción SQL  
+        $sql = "SELECT * FROM entradas WHERE usuario_id = $id";
+        // Hacemos directamente la consulta al no tener parámetros
+        $resultsquery = $this->conexion->query($sql);
+        //Supervisamos si la inserción se realizó correctamente... 
+        if ($resultsquery) :
+          $return["correcto"] = TRUE;
+          $return["datos"] = $resultsquery->fetchAll(PDO::FETCH_ASSOC);
+        endif; // o no :(
+      } catch (PDOException $ex) {
+        $return["error"] = $ex->getMessage();
+      }
+  
+      return $return;
+    }
+
+    public function addentrada($datos) {
+      $return = [
+          "correcto" => FALSE,
+          "error" => NULL
+      ];
+  
+      try {
+        //Inicializamos la transacción
+        $this->conexion->beginTransaction();
+        //Definimos la instrucción SQL parametrizada 
+        $sql = "INSERT INTO entradas(usuario_id,categoria_id,titulo,imagen,descripcion,fecha)
+                           VALUES (:usuario_id,:categoria_id,:titulo,:imagen,:descripcion,:fecha)";
+        // Preparamos la consulta...
+        $query = $this->conexion->prepare($sql);
+        // y la ejecutamos indicando los valores que tendría cada parámetro
+        $query->execute([
+            'usuario_id' => $datos["usuario_id"],
+            'categoria_id' => $datos["categoria_id"],
+            'titulo' => $datos["titulo"],
+            'imagen' => $datos["imagen"],
+            'descripcion' => $datos["descripcion"],
+            'fecha' => $datos["fecha"]
+        ]); //Supervisamos si la inserción se realizó correctamente... 
+        if ($query) {
+          $this->conexion->commit(); // commit() confirma los cambios realizados durante la transacción
+          $return["correcto"] = TRUE;
+        }// o no :(
+      } catch (PDOException $ex) {
+        $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+        $return["error"] = $ex->getMessage();
+        //die();
+      }
+  
+      return $return;
     }
 
   /**

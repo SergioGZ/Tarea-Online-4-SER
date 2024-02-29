@@ -37,7 +37,7 @@ class controlador {
         "tituloventana" => "Base de Datos con PHP y PDO"
     ];
     //Mostramos la página de inicio 
-    include_once 'vistas/inicio.php';
+    include_once 'vistas/login.php';
   }
 
   public function login($user, $pass)
@@ -46,15 +46,16 @@ class controlador {
         $datoUsuario = $this->modelo->login($user);
         if ($datoUsuario['correcto']) {
             if (
-                $datoUsuario['datos']['rol'] == $user && $datoUsuario['datos']['rol'] == $pass
+                $datoUsuario['datos']['nick'] == $user && $datoUsuario['datos']['password'] == $pass
             ) {
-                //session_start();
+                session_start();
                 $_SESSION['user'] = $user;
+                $_SESSION['nick'] = $datoUsuario['datos']['nick'];
                 $_SESSION['iduser'] = $datoUsuario['datos']['id'];
                 $_SESSION['rol'] = $datoUsuario['datos']['rol'];
                 $_SESSION['avatar'] = $datoUsuario['datos']['imagen'];
             } else {
-                header("Location: vistas/login.php?error=loginincorrecto");
+                header("Location: ./login.php?error=loginincorrecto");
             }
             $this->userLoginOk();
         } else {
@@ -76,9 +77,9 @@ class controlador {
 
         // Realizamos la consulta y almacenmos los resultados en la variable $resultModelo
         if (isset($_SESSION['user']) && $_SESSION['rol'] == "admin") {
-            $resultModelo = $this->modelo->listado($_SESSION['user_id']);
+            $resultModelo = $this->modelo->listadoEntradasAdmin();
         } elseif (isset($_SESSION['user']) && $_SESSION['rol'] == "user") {
-            $resultModelo = $this->modelo->listado($_SESSION['user_id']);
+            $resultModelo = $this->modelo->listadoEntradasUsuario($_SESSION['iduser']);
         }
 
         // Si la consulta se realizó correctamente transferimos los datos obtenidos
@@ -89,7 +90,7 @@ class controlador {
             //Definimos el mensaje para el alert de la vista de que todo fue correctamente
             $this->mensajes[] = [
                 "tipo" => "success",
-                "mensaje" => "La consulta realizó correctamente!! :)",
+                "mensaje" => "La consulta se realizó correctamente!! :)",
             ];
         } else {
             //Definimos el mensaje para el alert de la vista de que se produjeron errores al realizar el listado
@@ -109,6 +110,147 @@ class controlador {
             include_once 'vistas/listado.php';
         }
     }
+
+    public function listadoEntradasAdmin() {
+
+      $parametros = [
+          "tituloventana" => "Base de Datos con PHP y PDO",
+          "datos" => NULL,
+          "mensajes" => []
+      ];
+
+      $resultModelo = $this->modelo->listadoEntradasAdmin();
+
+      if ($resultModelo["correcto"]) :
+        $parametros["datos"] = $resultModelo["datos"];
+        $this->mensajes[] = [
+            "tipo" => "success",
+            "mensaje" => "El listado se realizó correctamente"
+        ];
+      else :
+        $this->mensajes[] = [
+            "tipo" => "danger",
+            "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+        ];
+      endif;
+
+      $parametros["mensajes"] = $this->mensajes;
+      include_once 'vistas/listado.php';
+    }
+    public function listadoEntradasUsuario($id) {
+      $parametros = [
+          "tituloventana" => "Base de Datos con PHP y PDO",
+          "datos" => NULL,
+          "mensajes" => []
+      ];
+      $resultModelo = $this->modelo->listadoEntradasUsuario($id);
+
+      if ($resultModelo["correcto"]) :
+        $parametros["datos"] = $resultModelo["datos"];
+        $this->mensajes[] = [
+            "tipo" => "success",
+            "mensaje" => "El listado se realizó correctamente"
+        ];
+      else :
+        $this->mensajes[] = [
+            "tipo" => "danger",
+            "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+        ];
+      endif;
+
+      $parametros["mensajes"] = $this->mensajes;
+      include_once 'vistas/listado.php';
+    }
+
+    public function addentrada() {
+      // Array asociativo que almacenará los mensajes de error que se generen por cada campo
+          $errores = array();
+      // Si se ha pulsado el botón guardar...
+          if (isset($_POST) && !empty($_POST) && isset($_POST['submit'])) { // y hermos recibido las variables del formulario y éstas no están vacías...
+            $usuario_id = $_GET['id'];
+            $categoria_id = $_POST['categoria_id'];
+            $titulo = $_POST['titulo'];
+            $descripcion = $_POST['descripcion'];
+            $fecha = $_POST['fecha'];
+
+            /* Realizamos la carga de la imagen en el servidor */
+      //       Comprobamos que el campo tmp_name tiene un valor asignado para asegurar que hemos
+      //       recibido la imagen correctamente
+      //       Definimos la variable $imagen que almacenará el nombre de imagen 
+      //       que almacenará la Base de Datos inicializada a NULL
+            $imagen = NULL;
+      
+            if (isset($_FILES["imagen"]) && (!empty($_FILES["imagen"]["tmp_name"]))) {
+              // Verificamos la carga de la imagen
+              // Comprobamos si existe el directorio fotos, y si no, lo creamos
+              if (!is_dir("fotos")) {
+                $dir = mkdir("fotos", 0777, true);
+              } else {
+                $dir = true;
+              }
+              // Ya verificado que la carpeta uploads existe movemos el fichero seleccionado a dicha carpeta
+              if ($dir) {
+                //Para asegurarnos que el nombre va a ser único...
+                $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
+                // Movemos el fichero de la carpeta temportal a la nuestra
+                $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
+                $imagen = $nombrefichimg;
+                // Verficamos que la carga se ha realizado correctamente
+                if ($movfichimg) {
+                  $imagencargada = true;
+                } else {
+                  $imagencargada = false;
+                  $this->mensajes[] = [
+                      "tipo" => "danger",
+                      "mensaje" => "Error: La imagen no se cargó correctamente! :("
+                  ];
+                  $errores["imagen"] = "Error: La imagen no se cargó correctamente! :(";
+                }
+              }
+            }
+            // Si no se han producido errores realizamos el registro del usuario
+            if (count($errores) == 0) {
+              $resultModelo = $this->modelo->addentrada([
+                  'usuario_id' => $usuario_id,
+                  'categoria_id' => $categoria_id,
+                  'titulo' => $titulo,
+                  'descripcion' => $descripcion,
+                  'fecha' => $fecha,
+                  'imagen' => $imagen
+              ]);
+              if ($resultModelo["correcto"]) :
+                $this->mensajes[] = [
+                    "tipo" => "success",
+                    "mensaje" => "El usuarios se registró correctamente!! :)"
+                ];
+              else :
+                $this->mensajes[] = [
+                    "tipo" => "danger",
+                    "mensaje" => "El usuario no pudo registrarse!! :( <br />({$resultModelo["error"]})"
+                ];
+              endif;
+            } else {
+              $this->mensajes[] = [
+                  "tipo" => "danger",
+                  "mensaje" => "Datos de registro de usuario erróneos!! :("
+              ];
+            }
+          }
+      
+          $parametros = [
+              "tituloventana" => "Base de Datos con PHP y PDO",
+              "datos" => [
+                  "categoria_id" => isset($categoria_id) ? $categoria_id : "",
+                  "titulo" => isset($titulo) ? $titulo : "",
+                  "descripcion" => isset($descripcion) ? $descripcion : "",
+                  "fecha" => isset($fecha) ? $fecha : "",
+                  "imagen" => isset($imagen) ? $imagen : ""
+              ],
+              "mensajes" => $this->mensajes
+          ];
+          //Visualizamos la vista asociada al registro de usuarios
+          include_once 'vistas/addentrada.php';
+        }
 
   /**
    * Método que obtiene de la base de datos el listado de usuarios y envía dicha
