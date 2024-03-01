@@ -1,9 +1,7 @@
 <?php
+  var_dump($_SESSION['iduser']);
   var_dump($parametros["datos"]);
-
-  if ($_SESSION['rol'] == "user") {
-    header("Location: index.php?accion=listadoEntradasUsuario&id=$_SESSION[iduser]");
-  }
+  
 ?>
 
 <html>

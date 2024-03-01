@@ -18,7 +18,7 @@ function checkParam($param)
 $controlador = new controlador();
 
 if (isset($_SESSION['user']))  {
-    include_once 'vistas/listadoAdmin.php';
+    include_once 'vistas/listado.php';
 }
 
 if ($_GET && $_GET["accion"]) {

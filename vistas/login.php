@@ -4,20 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi pequeño Blog</title>
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;700;800&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
   <!--Bootstrap-->
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@latest/font/bootstrap-icons.css" rel="stylesheet">
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
   <!--enlace pdf-->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!--enlaceckeditor-->
   <script src="https://cdn.ckeditor.com/4.16.0/standard/ckeditor.js"></script>
-  <!-- Enlace css -->
-  <link href="../CSS/style.css" rel="stylesheet" />
+
 
 
 </head>
@@ -25,10 +19,10 @@
 <body>
   <div class="container">
     <?php
-    if (isset($_GET['error'])) {
-      if ($_GET['error'] == "loginincorrecto") {
+    if (isset($_GET['accion'])) {
+      if ($_GET['accion'] == "loginincorrecto") {
         echo '<div class="alert alert-danger mt-3">' . "Tu nombre de usuario y/o tu contraseña no son correctos<br/>" . '</div>';
-      } elseif ($_GET['error'] == "fuera") {
+      } elseif ($_GET['accion'] == "fuera") {
         echo '<div class="alert alert-danger" style="margin-top:5px;">' . "No puede acceder  directamente en esta página, debe iniciar sesión <br/>" . '</div>';
       }
     }
