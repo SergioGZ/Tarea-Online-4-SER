@@ -52,7 +52,7 @@ class controlador {
                 $_SESSION['nick'] = $datoUsuario['datos']['nick'];
                 $_SESSION['iduser'] = $datoUsuario['datos']['id'];
                 $_SESSION['rol'] = $datoUsuario['datos']['rol'];
-                $_SESSION['avatar'] = $datoUsuario['datos']['imagen'];
+                $_SESSION['avatar'] = $datoUsuario['datos']['imagen-avatar'];
             } else {
                 header("Location: index.php?accion=loginincorrecto");
             }
@@ -60,7 +60,7 @@ class controlador {
         } else {
             $this->mensajes[] = [
                 "tipo" => "danger",
-                "mensaje" => "Error!! No se pudieron obtener los datos del usuario!! :( <br/> ({$datoUsuario["error"]})",
+                "mensaje" => "Error. No se pudieron obtener los datos del usuario<br/> ({$datoUsuario["error"]})",
             ];
         }
     }
@@ -69,37 +69,31 @@ class controlador {
     {
         // Almacenamos en el array 'parametros[]'los valores que vamos a mostrar en la vista
         $parametros = [
-            "tituloventana" => "Mi Pequeño Blog - " . $_SESSION['user'] . " (" . $_SESSION['rol'] . ")",
+            "tituloventana" => "Mi Blog - " . $_SESSION['user'] . " (" . $_SESSION['rol'] . ")",
             "datos" => null,
             "mensajes" => [],
         ];
 
-        // Realizamos la consulta y almacenmos los resultados en la variable $resultModelo
+        // Realizamos la consulta y almacenamos los resultados en la variable $resultModelo
         if (isset($_SESSION['user']) && $_SESSION['rol'] == "admin") {
             $resultModelo = $this->modelo->listadoEntradasAdmin();
         } elseif (isset($_SESSION['user']) && $_SESSION['rol'] == "user") {
             $resultModelo = $this->modelo->listadoEntradasUsuario($_SESSION['iduser']);
         }
 
-        // Si la consulta se realizó correctamente transferimos los datos obtenidos
-        // de la consulta del modelo ($resultModelo["datos"]) a nuestro array parámetros
-        // ($parametros["datos"]), que será el que le pasaremos a la vista para visualizarlos
         if ($resultModelo["correcto"]) {
             $parametros["datos"] = $resultModelo["datos"];
-            //Definimos el mensaje para el alert de la vista de que todo fue correctamente
             $this->mensajes[] = [
                 "tipo" => "success",
-                "mensaje" => "La consulta se realizó correctamente!! :)",
+                "mensaje" => "La consulta se realizó correctamente",
             ];
         } else {
-            //Definimos el mensaje para el alert de la vista de que se produjeron errores al realizar el listado
+            // Definimos el mensaje para el alert de la vista de que se produjeron errores al realizar el listado
             $this->mensajes[] = [
                 "tipo" => "danger",
-                "mensaje" => "Error!! La consulta no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})",
+                "mensaje" => "Error. La consulta no pudo realizarse correctamente<br/>({$resultModelo["error"]})",
             ];
         }
-        //Asignamos al campo 'mensajes' del array de parámetros el valor del atributo
-        //'mensaje', que recoge cómo finalizó la operación:
         $parametros['mensajes'] = $this->mensajes;
 
         // Incluimos la vista en la que visualizaremos los datos o un mensaje de error
@@ -131,7 +125,7 @@ class controlador {
       else :
         $this->mensajes[] = [
             "tipo" => "danger",
-            "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+            "mensaje" => "El listado no pudo realizarse correctamente<br/>({$resultModelo["error"]})"
         ];
       endif;
 
@@ -162,7 +156,7 @@ class controlador {
       else :
         $this->mensajes[] = [
             "tipo" => "danger",
-            "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+            "mensaje" => "El listado no pudo realizarse correctamente<br/>({$resultModelo["error"]})"
         ];
       endif;
 
@@ -171,22 +165,126 @@ class controlador {
     }
 
     public function addentrada() {
+      if (!isset($_SESSION)) {
+        session_start();
+      }
       
       // Array asociativo que almacenará los mensajes de error que se generen por cada campo
-          $errores = array();
-      // Si se ha pulsado el botón guardar...
-          if (isset($_POST) && !empty($_POST) && isset($_POST['submit'])) { // y hermos recibido las variables del formulario y éstas no están vacías...
-            $usuario_id = $_POST['id'];
-            $categoria_id = $_POST['categoria_id'];
-            $titulo = $_POST['titulo'];
-            $descripcion = $_POST['descripcion'];
-            $fecha = $_POST['fecha'];
+      $errores = array();
+        // Si se ha pulsado el botón guardar...
+      if (isset($_POST) && !empty($_POST) && isset($_POST['submit'])) {
+        $usuario_id = $_POST['id'];
+        $categoria_id = $_POST['categoria_id'];
+        $titulo = $_POST['titulo'];
+        $descripcion = $_POST['descripcion'];
+        $fecha = $_POST['fecha'];
 
-            /* Realizamos la carga de la imagen en el servidor */
-      //       Comprobamos que el campo tmp_name tiene un valor asignado para asegurar que hemos
-      //       recibido la imagen correctamente
-      //       Definimos la variable $imagen que almacenará el nombre de imagen 
-      //       que almacenará la Base de Datos inicializada a NULL
+        $imagen = NULL;
+
+        if (isset($_FILES["imagen"]) && (!empty($_FILES["imagen"]["tmp_name"]))) {
+          // Verificamos la carga de la imagen
+          // Comprobamos si existe el directorio fotos, y si no, lo creamos
+          if (!is_dir("fotos")) {
+            $dir = mkdir("fotos", 0777, true);
+          } else {
+            $dir = true;
+          }
+          // Ya verificado que la carpeta uploads existe movemos el fichero seleccionado a dicha carpeta
+          if ($dir) {
+            //Para asegurarnos que el nombre va a ser único, le añadimos al nombre del fichero la fecha y hora actual
+            $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
+            // Movemos el fichero de la carpeta temportal a la nuestra
+            $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
+            $imagen = $nombrefichimg;
+            // Verficamos que la carga se ha realizado correctamente
+            if ($movfichimg) {
+              $imagencargada = true;
+            } else {
+              $imagencargada = false;
+              $this->mensajes[] = [
+                  "tipo" => "danger",
+                  "mensaje" => "Error: La imagen no se cargó correctamente"
+              ];
+              $errores["imagen"] = "Error: La imagen no se cargó correctamente";
+            }
+          }
+        }
+        // Si no se han producido errores realizamos el registro del usuario
+        if (count($errores) == 0) {
+          $resultModelo = $this->modelo->addentrada([
+              'usuario_id' => $usuario_id,
+              'categoria_id' => $categoria_id,
+              'titulo' => $titulo,
+              'descripcion' => $descripcion,
+              'fecha' => $fecha,
+              'imagen' => $imagen
+          ]);
+          if ($resultModelo["correcto"]) :
+            $this->mensajes[] = [
+                "tipo" => "success",
+                "mensaje" => "La entrada se registró correctamente"
+            ];
+
+            $logs["usuario_id"] = $_SESSION['iduser'];
+            $logs["accion"] = "Se añadió una nueva entrada con el título $titulo";
+            $logs["fecha"] = date("Y-m-d H:i:s");
+            $this->insertarlog($logs);
+          else :
+            $this->mensajes[] = [
+                "tipo" => "danger",
+                "mensaje" => "La entrada no pudo registrarse<br/>({$resultModelo["error"]})"
+            ];
+          endif;
+        } else {
+          $this->mensajes[] = [
+              "tipo" => "danger",
+              "mensaje" => "Datos de registro de entrada erróneos"
+          ];
+        }
+      }
+
+      $parametros = [
+          "tituloventana" => "Base de Datos con PHP y PDO",
+          "datos" => [
+              "categoria_id" => isset($categoria_id) ? $categoria_id : "",
+              "titulo" => isset($titulo) ? $titulo : "",
+              "descripcion" => isset($descripcion) ? $descripcion : "",
+              "fecha" => isset($fecha) ? $fecha : "",
+              "imagen" => isset($imagen) ? $imagen : ""
+          ],
+          "mensajes" => $this->mensajes
+      ];
+
+      $categorias = $this->modelo->listadocategorias();
+
+      // Visualizamos la vista asociada al registro de usuarios
+      include_once 'vistas/addentrada.php';
+    }
+    
+        public function actentrada() {
+          if (!isset($_SESSION)) {
+            session_start();
+          }
+
+          // Array asociativo que almacenará los mensajes de error que se generen por cada campo
+          $errores = array();
+          // Inicializamos valores de los campos de texto
+          $valtitulo = "";
+          $valdescripcion = "";
+          $valfecha = "";
+          $valcategoria_id = "";
+          $valimagen = "";
+      
+          // Si se ha pulsado el botón actualizar
+          if (isset($_POST['submit'])) {
+            $id = $_POST['id']; //Lo recibimos por el campo oculto
+            $nuevotitulo = $_POST['titulo'];
+            $nuevadescripcion  = $_POST['descripcion'];
+            $nuevafecha = $_POST['fecha'];
+            $nuevacategoria_id = $_POST['categoria_id'];
+            $nuevaimagen = "";
+      
+            // Definimos la variable $imagen que almacenará el nombre de imagen 
             $imagen = NULL;
       
             if (isset($_FILES["imagen"]) && (!empty($_FILES["imagen"]["tmp_name"]))) {
@@ -197,45 +295,51 @@ class controlador {
               } else {
                 $dir = true;
               }
-              // Ya verificado que la carpeta uploads existe movemos el fichero seleccionado a dicha carpeta
               if ($dir) {
-                //Para asegurarnos que el nombre va a ser único...
-                $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
-                // Movemos el fichero de la carpeta temportal a la nuestra
+                
+                $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];                    
                 $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
                 $imagen = $nombrefichimg;
-                // Verficamos que la carga se ha realizado correctamente
+                
                 if ($movfichimg) {
                   $imagencargada = true;
                 } else {
                   $imagencargada = false;
+                  $errores["imagen"] = "Error: La imagen no se cargó correctamente! :(";
                   $this->mensajes[] = [
                       "tipo" => "danger",
                       "mensaje" => "Error: La imagen no se cargó correctamente! :("
                   ];
-                  $errores["imagen"] = "Error: La imagen no se cargó correctamente! :(";
                 }
               }
             }
-            // Si no se han producido errores realizamos el registro del usuario
+            $nuevaimagen = $imagen;
+      
             if (count($errores) == 0) {
-              $resultModelo = $this->modelo->addentrada([
-                  'usuario_id' => $usuario_id,
-                  'categoria_id' => $categoria_id,
-                  'titulo' => $titulo,
-                  'descripcion' => $descripcion,
-                  'fecha' => $fecha,
-                  'imagen' => $imagen
+              
+              $resultModelo = $this->modelo->actentrada([
+                  'id' => $id,
+                  'titulo' => $nuevotitulo,
+                  'descripcion' => $nuevadescripcion,
+                  'fecha' => $nuevafecha,
+                  'categoria_id' => $nuevacategoria_id,
+                  'imagen' => $nuevaimagen
               ]);
+
               if ($resultModelo["correcto"]) :
                 $this->mensajes[] = [
                     "tipo" => "success",
-                    "mensaje" => "El usuarios se registró correctamente!! :)"
+                    "mensaje" => "La entrada se actualizó correctamente!! :)"
                 ];
+
+                $logs["usuario_id"] = $_SESSION['iduser'];
+                $logs["accion"] = "Se actualizó la entrada $id";
+                $logs["fecha"] = date("Y-m-d H:i:s");
+                $this->insertarlog($logs);
               else :
                 $this->mensajes[] = [
                     "tipo" => "danger",
-                    "mensaje" => "El usuario no pudo registrarse!! :( <br />({$resultModelo["error"]})"
+                    "mensaje" => "La entrada no pudo actualizarse!! :( <br/>({$resultModelo["error"]})"
                 ];
               endif;
             } else {
@@ -244,207 +348,127 @@ class controlador {
                   "mensaje" => "Datos de registro de usuario erróneos!! :("
               ];
             }
-          }
       
+            // Obtenemos los valores para mostrarlos en los campos del formulario
+            $valtitulo = $nuevotitulo;
+            $valdescripcion  = $nuevadescripcion;
+            $valfecha = $nuevafecha;
+            $valcategoria_id = $nuevacategoria_id;
+            $valimagen = $nuevaimagen;
+          } else { // Obtenemos los valores del usuario a través de su id
+            if (isset($_GET['id']) && (is_numeric($_GET['id']))) {
+              $id = $_GET['id'];
+              //Ejecutamos la consulta para obtener los datos del usuario #id
+              $resultModelo = $this->modelo->listarentrada($id);
+              if ($resultModelo["correcto"]) :
+                $this->mensajes[] = [
+                    "tipo" => "success",
+                    "mensaje" => "Los datos de la entrada se obtuvieron correctamente"
+                ];
+                $valtitulo = $resultModelo["datos"]["titulo"];
+                $valdescripcion  = $resultModelo["datos"]["descripcion"];
+                $valfecha = $resultModelo["datos"]["fecha"];
+                $valcategoria_id = $resultModelo["datos"]["categoria_id"];
+                $valimagen = $resultModelo["datos"]["imagen"];
+              else :
+                $this->mensajes[] = [
+                    "tipo" => "danger",
+                    "mensaje" => "No se pudieron obtener los datos de entrada<br/>({$resultModelo["error"]})"
+                ];
+              endif;
+            }
+          }
           $parametros = [
               "tituloventana" => "Base de Datos con PHP y PDO",
               "datos" => [
-                  "categoria_id" => isset($categoria_id) ? $categoria_id : "",
-                  "titulo" => isset($titulo) ? $titulo : "",
-                  "descripcion" => isset($descripcion) ? $descripcion : "",
-                  "fecha" => isset($fecha) ? $fecha : "",
-                  "imagen" => isset($imagen) ? $imagen : ""
+                  "titulo" => $valtitulo,
+                  "descripcion"  => $valdescripcion,
+                  "fecha" => $valfecha,
+                  "categoria_id" => $valcategoria_id,
+                  "imagen"    => $valimagen
               ],
               "mensajes" => $this->mensajes
           ];
-          //Visualizamos la vista asociada al registro de usuarios
-          include_once 'vistas/addentrada.php';
-        }
-    
-        public function actentrada() {
-          // Array asociativo que almacenará los mensajes de error que se generen por cada campo
-              $errores = array();
-          // Inicializamos valores de los campos de texto
-              $valtitulo = "";
-              $valdescripcion = "";
-              $valfecha = "";
-              $valcategoria_id = "";
-              $valimagen = "";
-          
-          // Si se ha pulsado el botón actualizar...
-              if (isset($_POST['submit'])) { //Realizamos la actualización con los datos existentes en los campos
-                $id = $_POST['id']; //Lo recibimos por el campo oculto
-                $nuevotitulo = $_POST['titulo'];
-                $nuevadescripcion  = $_POST['descripcion'];
-                $nuevafecha = $_POST['fecha'];
-                $nuevacategoria_id = $_POST['categoria_id'];
-                $nuevaimagen = "";
-          
-                // Definimos la variable $imagen que almacenará el nombre de imagen 
-                // que almacenará la Base de Datos inicializada a NULL
-                $imagen = NULL;
-          
-                if (isset($_FILES["imagen"]) && (!empty($_FILES["imagen"]["tmp_name"]))) {
-                  // Verificamos la carga de la imagen
-                  // Comprobamos si existe el directorio fotos, y si no, lo creamos
-                  if (!is_dir("fotos")) {
-                    $dir = mkdir("fotos", 0777, true);
-                  } else {
-                    $dir = true;
-                  }
-                  // Ya verificado que la carpeta fotos existe movemos el fichero seleccionado a dicha carpeta
-                  if ($dir) {
-                    //Para asegurarnos que el nombre va a ser único...
-                    $nombrefichimg = time() . "-" . $_FILES["imagen"]["name"];
-                    // Movemos el fichero de la carpeta temportal a la nuestra
-                    $movfichimg = move_uploaded_file($_FILES["imagen"]["tmp_name"], "fotos/" . $nombrefichimg);
-                    $imagen = $nombrefichimg;
-                    // Verficamos que la carga se ha realizado correctamente
-                    if ($movfichimg) {
-                      $imagencargada = true;
-                    } else {
-                      //Si no pudo moverse a la carpeta destino generamos un mensaje que se le
-                      //mostrará al usuario en la vista actuser
-                      $imagencargada = false;
-                      $errores["imagen"] = "Error: La imagen no se cargó correctamente! :(";
-                      $this->mensajes[] = [
-                          "tipo" => "danger",
-                          "mensaje" => "Error: La imagen no se cargó correctamente! :("
-                      ];
-                    }
-                  }
-                }
-                $nuevaimagen = $imagen;
-          
-                if (count($errores) == 0) {
-                  //Ejecutamos la instrucción de actualización a la que le pasamos los valores
-                  $resultModelo = $this->modelo->actentrada([
-                      'id' => $id,
-                      'titulo' => $nuevotitulo,
-                      'descripcion' => $nuevadescripcion,
-                      'fecha' => $nuevafecha,
-                      'categoria_id' => $nuevacategoria_id,
-                      'imagen' => $nuevaimagen
-                  ]);
-                  //Analizamos cómo finalizó la operación de registro y generamos un mensaje
-                  //indicativo del estado correspondiente
-                  if ($resultModelo["correcto"]) :
-                    $this->mensajes[] = [
-                        "tipo" => "success",
-                        "mensaje" => "El usuario se actualizó correctamente!! :)"
-                    ];
-                  else :
-                    $this->mensajes[] = [
-                        "tipo" => "danger",
-                        "mensaje" => "El usuario no pudo actualizarse!! :( <br/>({$resultModelo["error"]})"
-                    ];
-                  endif;
-                } else {
-                  $this->mensajes[] = [
-                      "tipo" => "danger",
-                      "mensaje" => "Datos de registro de usuario erróneos!! :("
-                  ];
-                }
-          
-                // Obtenemos los valores para mostrarlos en los campos del formulario
-                $valtitulo = $nuevotitulo;
-                $valdescripcion  = $nuevadescripcion;
-                $valfecha = $nuevafecha;
-                $valcategoria_id = $nuevacategoria_id;
-                $valimagen = $nuevaimagen;
-              } else { //Estamos rellenando los campos con los valores recibidos del listado
-                if (isset($_GET['id']) && (is_numeric($_GET['id']))) {
-                  $id = $_GET['id'];
-                  //Ejecutamos la consulta para obtener los datos del usuario #id
-                  $resultModelo = $this->modelo->listarentrada($id);
-                  //Analizamos si la consulta se realiz´correctamente o no y generamos un
-                  //mensaje indicativo
-                  if ($resultModelo["correcto"]) :
-                    $this->mensajes[] = [
-                        "tipo" => "success",
-                        "mensaje" => "Los datos del usuario se obtuvieron correctamente!! :)"
-                    ];
-                    $valtitulo = $resultModelo["datos"]["titulo"];
-                    $valdescripcion  = $resultModelo["datos"]["descripcion"];
-                    $valfecha = $resultModelo["datos"]["fecha"];
-                    $valcategoria_id = $resultModelo["datos"]["categoria_id"];
-                    $valimagen = $resultModelo["datos"]["imagen"];
-                  else :
-                    $this->mensajes[] = [
-                        "tipo" => "danger",
-                        "mensaje" => "No se pudieron obtener los datos de usuario!! :( <br/>({$resultModelo["error"]})"
-                    ];
-                  endif;
-                }
-              }
-              //Preparamos un array con todos los valores que tendremos que rellenar en
-              //la vista adduser: título de la página y campos del formulario
-              $parametros = [
-                  "tituloventana" => "Base de Datos con PHP y PDO",
-                  "datos" => [
-                      "titulo" => $valtitulo,
-                      "descripcion"  => $valdescripcion,
-                      "fecha" => $valfecha,
-                      "categoria_id" => $valcategoria_id,
-                      "imagen"    => $valimagen
-                  ],
-                  "mensajes" => $this->mensajes
-              ];
-              //Mostramos la vista actuser
-              include_once 'vistas/actentrada.php';
-            }
 
-  /**
-   * Método de la clase controlador que realiza la eliminación de un usuario a 
-   * través del campo id
-   */
+          $categorias = $this->modelo->listadocategorias();
+          //Mostramos la vista actuser
+          include_once 'vistas/actentrada.php';
+        }
+
+  // Método que elimina un usuario de la base de datos
   public function delentrada() {
 
-    // verificamos que hemos recibido los parámetros desde la vista de listado 
+    // Verificamos que hemos recibido los parámetros desde la vista de listado 
     if (isset($_GET['id']) && (is_numeric($_GET['id']))) {
       $id = $_GET["id"];
-      $datosUsuario = $this->modelo->listarentrada($id);
 
       if(!isset($_SESSION)) {
         session_start();
       }
-      if (($_SESSION['iduser'] != $datosUsuario['datos']['usuario_id']) && ($_SESSION['rol'] != "admin")) {
-        $this->mensajes[] = [
-            "tipo" => "danger",
-            "mensaje" => "No puedes eliminar una entrada que no es tuya!! :("
-        ];
-        return;
-      }
 
-      //Realizamos la operación de suprimir el usuario con el id=$id
-      $resultModelo = $this->modelo->delentrada($id);
-      //Analizamos el valor devuelto por el modelo para definir el mensaje a 
-      //mostrar en la vista listado
-      if ($resultModelo["correcto"]) :
-        $this->mensajes[] = [
-            "tipo" => "success",
-            "mensaje" => "Se eliminó correctamente la entrada $id"
-        ];
-      else :
-        $this->mensajes[] = [
-            "tipo" => "danger",
-            "mensaje" => "La eliminación de la entrada no se realizó correctamente!! :( <br/>({$resultModelo["error"]})"
-        ];
-      endif;
-    } else { //Si no recibimos el valor del parámetro $id generamos el mensaje indicativo:
-      $this->mensajes[] = [
-          "tipo" => "danger",
-          "mensaje" => "No se pudo acceder al id de la entrada a eliminar!! :("
-      ];
+      // Realizamos la operación de suprimir el usuario con el id=$id
+      $this->modelo->delentrada($id);
+
+      $logs["usuario_id"] = $_SESSION['iduser'];
+      $logs["accion"] = "Se eliminó la entrada $id";
+      $logs["fecha"] = date("Y-m-d H:i:s");
+      $this->insertarlog($logs);
+
+      // Redirigimos a la página de listado de usuarios
+      header("Location: index.php?accion=listadoEntradasAdmin");
     }
-    //Relizamos el listado de los usuarios
-    $this->listadoEntradasAdmin();
+      
   }
 
   public function logout() {
     session_start();
     session_destroy();
     header("Location: ./index.php");
+  }
+
+  public function insertarlog($logs) {
+    $resultLogs = $this->modelo->insertarlog($logs);
+    if ($resultLogs["correcto"]) :
+      $this->mensajes[] = [
+          "tipo" => "success",
+          "mensaje" => "Se insertó correctamente el log"
+      ];
+    else :
+      $this->mensajes[] = [
+          "tipo" => "danger",
+          "mensaje" => "La inserción del log no se realizó correctamente!! :( <br/>({$resultLogs["error"]})"
+      ];
+    endif;
+  }
+
+  public function listadetalle() {
+    if (!isset($_SESSION)) {
+      session_start();
+    }
+    $parametros = [
+        "tituloventana" => "Base de Datos con PHP y PDO",
+        "datos" => NULL,
+        "mensajes" => []
+    ];
+
+    $id = $_GET['id'];
+    $resultModelo = $this->modelo->listarentrada($id);
+
+    if ($resultModelo["correcto"]) :
+      $parametros["datos"] = $resultModelo["datos"];
+      $this->mensajes[] = [
+          "tipo" => "success",
+          "mensaje" => "El listado se realizó correctamente"
+      ];
+    else :
+      $this->mensajes[] = [
+          "tipo" => "danger",
+          "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+      ];
+    endif;
+
+    $parametros["mensajes"] = $this->mensajes;
+    include_once 'vistas/listadetalle.php';
   }
 
 }

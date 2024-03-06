@@ -1,7 +1,10 @@
 <?php
-  var_dump($_SESSION['iduser']);
-  var_dump($parametros["datos"]);
+  //var_dump($_SESSION['iduser']);
+  //var_dump($parametros["datos"]);
   
+  if (!isset($_SESSION['iduser'])) {
+    header('Location: index.php');
+  }
 ?>
 
 <html>
@@ -38,7 +41,9 @@
         </div>
       </div>
       <div class="mt-1 mb-5">
-        <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>
+        <a class="btn btn-secondary" href="index.php?accion=listadetalle&id=<?= $d['ID'] ?>">Detalles</a>
+        <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> 
+        <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>  
       </div>
       <?php endforeach; ?>
     </div>

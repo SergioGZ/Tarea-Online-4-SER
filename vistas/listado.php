@@ -1,5 +1,9 @@
 <?php
-  var_dump($parametros["datos"]);
+  //var_dump($parametros["datos"]);
+
+  if (!isset($_SESSION['iduser'])) {
+    header('Location: index.php');
+  }
 
   if ($_SESSION['rol'] == "user") {
     header("Location: index.php?accion=listadoEntradasUsuario&id=$_SESSION[iduser]");
@@ -26,13 +30,13 @@
         <h3 class="text-center">Autor: <?= $d["nick"] ?></h3>
         </div>
 
-        <div class="col-12 bg-white border border-5 border-start-0 border-end-0 border-dark" id="contenidoentrada">
+        <div class="col-12 bg-white border border-5 border-start-0 border-end-0 border-dark text-center" id="contenidoentrada">
           <?php if ($d["imagen"] !== NULL) : ?>
           <img class="mx-auto d-flex justify-content-center mt-3" src="fotos/<?= $d['imagen'] ?>" width="70" />
           <?php else : ?>
           <p class="text-center">----</p>
           <?php endif; ?>
-          <p class="mx-auto d-flex justify-content-center"><?= $d["descripcion"] ?></p>
+          <p><?= $d["descripcion"] ?></p>
         </div>
 
         <div class="col-12">
@@ -40,7 +44,9 @@
         </div>
       </div>
       <div class="mt-1 mb-5">
-        <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>
+        <a class="btn btn-secondary" href="index.php?accion=listadetalle&id=<?= $d['ID'] ?>">Detalles</a>
+        <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> 
+        <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>  
       </div>
       <?php endforeach; ?>
     </div>
