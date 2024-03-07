@@ -46,9 +46,21 @@
       <div class="mt-1 mb-5">
         <a class="btn btn-secondary" href="index.php?accion=listadetalle&id=<?= $d['ID'] ?>">Detalles</a>
         <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> 
-        <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>  
+        <a class="btn btn-danger" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>" onclick="return confirmarEliminar()">Eliminar</a> 
       </div>
       <?php endforeach; ?>
     </div>
+
+    <script>
+      // Función para mostrar el mensaje de confirmación de eliminación de una entrada
+      function confirmarEliminar() {
+        var x = confirm("¿Estás seguro de que quieres eliminar esta entrada?");
+        if (x) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    </script>
   </body>
 </html>

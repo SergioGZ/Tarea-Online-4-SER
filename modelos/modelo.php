@@ -144,9 +144,8 @@ class modelo {
           $return["correcto"] = TRUE;
         }// o no :(
       } catch (PDOException $ex) {
-        $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+        $this->conexion->rollback();
         $return["error"] = $ex->getMessage();
-        //die();
       }
   
       return $return;
@@ -165,14 +164,12 @@ class modelo {
           $sql = "SELECT usuarios.nick, entradas.*, categorias.nombre AS nombreCategoria FROM entradas INNER JOIN usuarios ON entradas.usuario_id = usuarios.id INNER JOIN categorias ON entradas.categoria_id = categorias.id WHERE entradas.id=:id";
           $query = $this->conexion->prepare($sql);
           $query->execute(['id' => $id]);
-          // Supervisamos que la consulta se realizó correctamente
           if ($query) {
             $return["correcto"] = TRUE;
             $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
-          }// o no :(
+          }
         } catch (PDOException $ex) {
           $return["error"] = $ex->getMessage();
-          //die();
         }
       }
   
@@ -200,13 +197,12 @@ class modelo {
         ]);
 
         if ($query) {
-          $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
+          $this->conexion->commit(); 
           $return["correcto"] = TRUE;
         }// o no :(
       } catch (PDOException $ex) {
-        $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+        $this->conexion->rollback();
         $return["error"] = $ex->getMessage();
-        //die();
       }
   
       return $return;
@@ -220,19 +216,18 @@ class modelo {
     ];
     if ($id && is_numeric($id)) {
       try {
-        //Inicializamos la transacción
         $this->conexion->beginTransaction();
-        //Definimos la instrucción SQL parametrizada 
+
         $sql = "DELETE FROM entradas WHERE id=:id";
         $query = $this->conexion->prepare($sql);
         $query->execute(['id' => $id]);
   
         if ($query) {
-          $this->conexion->commit();  // commit() confirma los cambios realizados durante la transacción
+          $this->conexion->commit(); 
           $return["correcto"] = TRUE;
         }// o no :(
       } catch (PDOException $ex) {
-        $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+        $this->conexion->rollback();
         $return["error"] = $ex->getMessage();
       }
     } else {
@@ -255,14 +250,13 @@ class modelo {
         $sql = "SELECT * FROM usuarios WHERE id=:id";
         $query = $this->conexion->prepare($sql);
         $query->execute(['id' => $id]);
-        //Supervisamos que la consulta se realizó correctamente... 
+        
         if ($query) {
           $return["correcto"] = TRUE;
           $return["datos"] = $query->fetch(PDO::FETCH_ASSOC);
-        }// o no :(
+        }
       } catch (PDOException $ex) {
         $return["error"] = $ex->getMessage();
-        //die();
       }
     }
 
@@ -276,12 +270,10 @@ class modelo {
         "datos" => NULL,
         "error" => NULL
     ];
-    //Realizamos la consulta...
-    try {  //Definimos la instrucción SQL  
+    
+    try {  
       $sql = "SELECT * FROM categorias";
-      // Hacemos directamente la consulta al no tener parámetros
       $resultsquery = $this->conexion->query($sql);
-      //Supervisamos si la inserción se realizó correctamente... 
       if ($resultsquery) {
         $return["correcto"] = TRUE;
         $return["datos"] = $resultsquery->fetchAll(PDO::FETCH_ASSOC);
@@ -293,6 +285,7 @@ class modelo {
     return $return;
   }
 
+  // Método para insertar un log en la base de datos
   public function insertarlog($datos) {
     $return = [
         "correcto" => FALSE,
@@ -313,11 +306,10 @@ class modelo {
       if ($query) {
         $this->conexion->commit();
         $return["correcto"] = TRUE;
-      }// o no :(
+      }
     } catch (PDOException $ex) {
-      $this->conexion->rollback(); // rollback() se revierten los cambios realizados durante la transacción
+      $this->conexion->rollback();
       $return["error"] = $ex->getMessage();
-      //die();
     }
 
     return $return;

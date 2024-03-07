@@ -463,7 +463,7 @@ class controlador {
     else :
       $this->mensajes[] = [
           "tipo" => "danger",
-          "mensaje" => "El listado no pudo realizarse correctamente!! :( <br/>({$resultModelo["error"]})"
+          "mensaje" => "El listado no pudo realizarse correctamente{$resultModelo["error"]})"
       ];
     endif;
 

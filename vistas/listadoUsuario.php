@@ -27,7 +27,7 @@
         <h3 class="text-center">Autor: <?= $d["nick"] ?></h3>
         </div>
 
-        <div class="col-12 bg-white border border-5 border-start-0 border-end-0 border-dark" id="contenidoentrada">
+        <div class="col-12 bg-white border border-5 border-start-0 border-end-0 border-dark text-center" id="contenidoentrada">
           <?php if ($d["imagen"] !== NULL) : ?>
           <img class="mx-auto d-flex justify-content-center mt-3" src="fotos/<?= $d['imagen'] ?>" width="70" />
           <?php else : ?>
@@ -43,9 +43,21 @@
       <div class="mt-1 mb-5">
         <a class="btn btn-secondary" href="index.php?accion=listadetalle&id=<?= $d['ID'] ?>">Detalles</a>
         <a class="btn btn-secondary" href="index.php?accion=actentrada&id=<?= $d['ID'] ?>">Editar</a> 
-        <a class="btn btn-secondary" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>">Eliminar</a>  
+        <a class="btn btn-danger" href="index.php?accion=delentrada&id=<?= $d['ID'] ?>" onclick="return confirmarEliminar()">Eliminar</a>  
       </div>
       <?php endforeach; ?>
     </div>
+
+    <script>
+      // Función para mostrar el mensaje de confirmación de eliminación de una entrada
+      function confirmarEliminar() {
+        var x = confirm("¿Estás seguro de que quieres eliminar esta entrada?");
+        if (x) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    </script>
   </body>
 </html>
